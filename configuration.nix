@@ -195,6 +195,10 @@
     protonup-qt
     heroic
 
+    # GPU Tuning
+    e2fsprogs
+    lact
+
     # Remoting
     xorg.xrandr
     wayvnc
@@ -250,6 +254,7 @@
     capSysAdmin = true;
     openFirewall = true;
   };
+
 
   services.tailscale.enable = true;
 
