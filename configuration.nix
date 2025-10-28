@@ -172,6 +172,7 @@
     xdg-utils
     xdgmenumaker
     bemenu
+    foot
 
     # Media
     mpv
