@@ -18,6 +18,7 @@ fi
 
 echo "🚀 Pushing to GitHub..."
 # Use regular user's SSH keys and environment, not root's
-sudo -u "$SUDO_USER" -H bash -c "cd /etc/nixos && git push origin main"
+USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+sudo -u "$SUDO_USER" env HOME="$USER_HOME" SSH_AUTH_SOCK="$SSH_AUTH_SOCK" git -C /etc/nixos push origin main
 
 echo "✅ Changes pushed successfully!"
