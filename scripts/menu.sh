@@ -99,25 +99,17 @@ while true; do
             ;;
         4)
             echo ""
-            show_progress 1 2 "Updating system"
-            run_with_spinner "$SCRIPT_DIR/update.sh" "Updating system..." || { press_enter; continue; }
-            echo ""
-            show_progress 2 2 "Pushing to GitHub"
-            run_with_spinner "$SCRIPT_DIR/push.sh" "Pushing to GitHub..." "System update $(date '+%Y-%m-%d')"
+            run_with_spinner "$SCRIPT_DIR/update.sh" "[1/2] Updating system..." || { press_enter; continue; }
+            run_with_spinner "$SCRIPT_DIR/push.sh" "[2/2] Pushing to GitHub..." "System update $(date '+%Y-%m-%d')"
             echo ""
             echo "[COMPLETE]"
             press_enter
             ;;
         5)
             echo ""
-            show_progress 1 3 "Updating system"
-            run_with_spinner "$SCRIPT_DIR/update.sh" "Updating system..." || { press_enter; continue; }
-            echo ""
-            show_progress 2 3 "Pushing to GitHub"
-            run_with_spinner "$SCRIPT_DIR/push.sh" "Pushing to GitHub..." "System update $(date '+%Y-%m-%d')" || { press_enter; continue; }
-            echo ""
-            show_progress 3 3 "Garbage collection"
-            run_with_spinner "$SCRIPT_DIR/gc.sh" "Running garbage collection..."
+            run_with_spinner "$SCRIPT_DIR/update.sh" "[1/3] Updating system..." || { press_enter; continue; }
+            run_with_spinner "$SCRIPT_DIR/push.sh" "[2/3] Pushing to GitHub..." "System update $(date '+%Y-%m-%d')" || { press_enter; continue; }
+            run_with_spinner "$SCRIPT_DIR/gc.sh" "[3/3] Running garbage collection..."
             echo ""
             echo "[FULL MAINTENANCE COMPLETE]"
             press_enter
