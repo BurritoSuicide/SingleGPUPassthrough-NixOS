@@ -215,6 +215,8 @@
     unstablePkgs.waybar
     unstablePkgs.wayvnc
     unstablePkgs.app2unit
+    unstablePkgs.ddcutil
+    unstablePkgs.libcava
   ] ++ [
     # Git-built packages
     gitPkgs.quickshell
