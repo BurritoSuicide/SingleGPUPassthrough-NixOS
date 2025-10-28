@@ -214,6 +214,7 @@
     unstablePkgs.kando
     unstablePkgs.waybar
     unstablePkgs.wayvnc
+    unstablePkgs.app2unit
   ] ++ [
     # Git-built packages
     gitPkgs.quickshell
