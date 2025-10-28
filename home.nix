@@ -72,7 +72,22 @@
     #Astrophotography
     siril
 	kstars
+
+    # Development
+    nodejs
+    vscode
+
+    # Image editing
+    gimp
+    krita
+    hyprshot
 	
+    # Productivity
+    obsidian
+    libreoffice-qt6
+
+    # 3D
+    blender
   ];
 
   # You can also manage individual program configurations here

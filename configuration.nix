@@ -79,11 +79,14 @@
     };
   };
 
+  services.udev.packages = [ pkgs.android-udev-rules ];
+  programs.adb.enable = true;
+
   # Define a user account. Don't forget to set a password with 'passwd'.
   users.users.scryv = {
     isNormalUser = true;
     description = "scryv";
-    extraGroups = [ "networkmanager" "wheel" "libvirtd" "sunshine" "scryv" "audio" "video" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd" "sunshine" "scryv" "audio" "video" "adbusers" "plugdev"];
     shell = pkgs.fish;
   };
 
@@ -110,19 +113,6 @@
 
   # System packages (stable 25.05)
   environment.systemPackages = with pkgs; [
-    # Terminal utilities
-    vim
-    wget
-    git
-    micro
-    pciutils
-    fd
-    tree
-    curl
-    gawk
-    jq
-    fzf
-    bc
 
     # Python with packages
     (python3.withPackages (ps: with ps; [
@@ -144,6 +134,30 @@
     psutils
     sysstat
     eza
+    vim
+    wget
+    git
+    micro
+    pciutils
+    fd
+    tree
+    curl
+    gawk
+    jq
+    fzf
+    bc
+
+    # Monitoring
+    radeontop
+    amdgpu_top
+    gcalcli
+
+    # GPU Tuning
+    e2fsprogs
+    lact
+
+    # Disk Management
+    ncdu
 
     # Wayland/Hyprland
     wofi
@@ -159,11 +173,6 @@
     xdgmenumaker
     bemenu
 
-    # Monitoring
-    radeontop
-    amdgpu_top
-    gcalcli
-
     # Media
     mpv
     mpvpaper
@@ -173,14 +182,6 @@
     sassc
     pavucontrol
     vlc
-
-    # Development
-    nodejs
-    vscode
-
-    # Image editing
-    gimp
-    krita
 
     # Electronics
     arduino-ide
@@ -195,46 +196,66 @@
     protonup-qt
     heroic
 
-    # GPU Tuning
-    e2fsprogs
-    lact
-
-    # Remoting
-    xorg.xrandr
-    wayvnc
-    openssl
-
-    # Browsers
-    google-chrome
-
     # .NET
     dotnet-sdk_8
     dotnet-runtime_8
     dotnet-aspnetcore_8
 
-    # Productivity
-    obsidian
-    libreoffice-qt6
+    # Remoting
+    xorg.xrandr
+    openssl
 
-    # 3D
-    blender
+    # Phone streaming
+    android-tools
+    scrcpy
 
-    # Disk Management
-    ncdu
-    
   ] ++ [
     # Unstable packages
     unstablePkgs.kando
     unstablePkgs.waybar
+    unstablePkgs.wayvnc
   ] ++ [
     # Git-built packages
     gitPkgs.quickshell
   ];
 
+  # Graphics support
+  hardware.graphics.enable = true;
+
+  # Remoting
+  services.openssh.enable = true;
+  services.tailscale.enable = true;
+
   services.cockpit = {
     enable = true;
     openFirewall = true;
   };
+
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
+
+  # Linux Gaming
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    gamescopeSession.enable = true;
+  };
+
+  # Flatpak
+  services.flatpak.enable = true;
+
+  environment.sessionVariables.XDG_DATA_DIRS = lib.mkAfter [
+    "/var/lib/flatpak/exports/share"
+    "${config.users.users.scryv.home}/.local/share/flatpak/exports/share"
+  ];
+
+  security.polkit.enable = true;
+
 
   security.sudo.enable = true;
   security.sudo.extraConfig = ''
@@ -248,37 +269,8 @@
     papirus-icon-theme
   ];
 
-  services.sunshine = {
-    enable = true;
-    autoStart = true;
-    capSysAdmin = true;
-    openFirewall = true;
-  };
 
-
-  services.tailscale.enable = true;
-
-  # Flatpak
-  services.flatpak.enable = true;
-
-  environment.sessionVariables.XDG_DATA_DIRS = lib.mkAfter [
-    "/var/lib/flatpak/exports/share"
-    "${config.users.users.scryv.home}/.local/share/flatpak/exports/share"
-  ];
-
-  security.polkit.enable = true;
-
-  # Linux Gaming
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
-  };
-
-  hardware.graphics.enable = true;
-
-  # Configure GPU passthrough
+  # Configure GPU passthrough for virtualization. See gpu-passthrough.nix for more information.
   services.gpu-passthrough = {
     enable = true;
     vmName = "win10";  # Name of your VM
@@ -293,15 +285,8 @@
 
   virtualisation.kvmgt.enable = true;
 
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 5900 ];
-
-  networking.extraHosts = ''
-    192.168.0.41 rancher.local
-  '';
 
   system.stateVersion = "25.05";
   nix.settings.experimental-features = [ "nix-command" "flakes" ];

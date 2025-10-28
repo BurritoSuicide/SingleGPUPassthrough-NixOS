@@ -212,6 +212,9 @@ in {
       # Prevent vfio-pci from auto-binding to GPU at boot
       # The hooks will bind/unbind dynamically when VM starts/stops
       options vfio-pci disable_vga=1
+      options kvm_intel nested=1
+      options kvm_intel emulate_invalid_guest_state=0
+      options kvm ignore_msrs=1
     '';
 
     # Install required packages
