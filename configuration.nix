@@ -173,6 +173,7 @@
     xdgmenumaker
     bemenu
     foot
+    starship
 
     # Media
     mpv
