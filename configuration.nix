@@ -151,6 +151,7 @@
     radeontop
     amdgpu_top
     gcalcli
+    libqalculate
 
     # GPU Tuning
     e2fsprogs
