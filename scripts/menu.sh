@@ -23,16 +23,16 @@ show_menu() {
 spinner() {
     local pid=$1
     local task=$2
-    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local spin='|/-\'
     local i=0
     
     echo -n "$task "
     while kill -0 $pid 2>/dev/null; do
-        i=$(( (i+1) %10 ))
+        i=$(( (i+1) %4 ))
         printf "\r$task ${spin:$i:1}"
         sleep 0.1
     done
-    printf "\r$task ✓\n"
+    printf "\r$task [DONE]\n"
 }
 
 # Progress bar for multi-step operations
@@ -45,8 +45,8 @@ show_progress() {
     local empty=$((50 - filled))
     
     printf "\r[$current/$total] $task ["
-    printf "%${filled}s" | tr ' ' '█'
-    printf "%${empty}s" | tr ' ' '░'
+    printf "%${filled}s" | tr ' ' '='
+    printf "%${empty}s" | tr ' ' '-'
     printf "] ${percent}%%"
 }
 
@@ -62,7 +62,7 @@ run_with_spinner() {
     local exit_code=$?
     
     if [ $exit_code -ne 0 ]; then
-        echo "❌ Error occurred. Log:"
+        echo "[ERROR] occurred. Log:"
         tail -20 /tmp/nix-script.log
         return $exit_code
     fi
@@ -105,7 +105,7 @@ while true; do
             show_progress 2 2 "Pushing to GitHub"
             run_with_spinner "$SCRIPT_DIR/push.sh" "Pushing to GitHub..." "System update $(date '+%Y-%m-%d')"
             echo ""
-            echo "✅ Complete!"
+            echo "[COMPLETE]"
             press_enter
             ;;
         5)
@@ -119,7 +119,7 @@ while true; do
             show_progress 3 3 "Garbage collection"
             run_with_spinner "$SCRIPT_DIR/gc.sh" "Running garbage collection..."
             echo ""
-            echo "✅ Full maintenance complete!"
+            echo "[FULL MAINTENANCE COMPLETE]"
             press_enter
             ;;
         0)
