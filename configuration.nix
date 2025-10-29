@@ -86,7 +86,7 @@
   users.users.scryv = {
     isNormalUser = true;
     description = "scryv";
-    extraGroups = [ "networkmanager" "wheel" "libvirtd" "sunshine" "scryv" "audio" "video" "adbusers" "plugdev"];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd" "sunshine" "scryv" "audio" "video" "adbusers" "plugdev" "kvm" "input"];
     shell = pkgs.fish;
   };
 
