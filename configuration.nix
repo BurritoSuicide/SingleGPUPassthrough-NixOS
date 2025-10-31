@@ -146,6 +146,7 @@
     jq
     fzf
     bc
+    busybox
 
     # Monitoring
     radeontop
