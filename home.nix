@@ -103,23 +103,30 @@
 
   # Caelestia shell configuration
   programs.caelestia = {
-    enable = true;
-    systemd = {
-      enable = false; # if you prefer starting from your compositor
-      target = "graphical-session.target";
-      environment = [];
-    };
-    settings = {
-      bar.status = {
-        showBattery = false;
+      enable = true;
+      systemd = {
+        enable = false; # if you prefer starting from your compositor
+        target = "graphical-session.target";
+        environment = [];
       };
-      paths.wallpaperDir = "~/Images";
-    };
-    cli = {
-      enable = true; # Also add caelestia-cli to path
       settings = {
-        theme.enableGtk = false;
+        bar.status = {
+          showBattery = false;
+        };
+        paths.wallpaperDir = "~/Images";
+        # Add these lines to disable screen locking
+        idle = {
+          enabled = false;
+        };
+        lock = {
+          enabled = false;
+        };
+      };
+      cli = {
+        enable = true; # Also add caelestia-cli to path
+        settings = {
+          theme.enableGtk = false;
+        };
       };
     };
-  };
 }
