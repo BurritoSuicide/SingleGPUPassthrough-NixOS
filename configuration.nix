@@ -221,6 +221,7 @@
     unstablePkgs.app2unit
     unstablePkgs.ddcutil
     unstablePkgs.libcava
+    unstablePkgs.code-cursor
   ] ++ [
     # Git-built packages
     gitPkgs.quickshell
