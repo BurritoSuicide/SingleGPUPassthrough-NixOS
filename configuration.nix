@@ -213,6 +213,9 @@
     android-tools
     scrcpy
 
+    #AI
+    ollama
+
   ] ++ [
     # Unstable packages
     unstablePkgs.kando
