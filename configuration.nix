@@ -213,9 +213,11 @@
     android-tools
     scrcpy
 
-    #AI
+    # AI
     ollama
 
+	# Hyprland
+	hyprlock
   ] ++ [
     # Unstable packages
     unstablePkgs.kando
