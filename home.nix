@@ -105,7 +105,7 @@
   programs.caelestia = {
       enable = true;
       systemd = {
-        enable = false; # if you prefer starting from your compositor
+        enable = true;
         target = "graphical-session.target";
         environment = [];
       };
