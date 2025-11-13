@@ -114,12 +114,10 @@
           showBattery = false;
         };
         paths.wallpaperDir = "~/Images";
-        # Add these lines to disable screen locking
-        idle = {
-          enabled = false;
-        };
-        lock = {
-          enabled = false;
+        general.idle = {
+          lockBeforeSleep = false;
+          inhibitWhenAudio = true;
+          timeouts = [];
         };
       };
       cli = {
