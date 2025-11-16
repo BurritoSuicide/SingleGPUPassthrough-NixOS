@@ -1,1 +1,0 @@
-/nix/store/50xnbg5ddfwznq2qw49r7sc5gwlh9hc4-home-manager-files/.config/hypr/scripts/cycle-shell.sh
