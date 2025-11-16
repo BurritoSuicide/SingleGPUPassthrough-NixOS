@@ -1,4 +1,4 @@
-{ config, pkgs, lib, dms, ... }:
+{ config, pkgs, lib, dms, gitPkgs, ... }:
 let
   system = pkgs.stdenv.hostPlatform.system;
   dmsPkgs = {
@@ -12,7 +12,9 @@ in {
   programs.dankMaterialShell = {
     enable = true;
     systemd.enable = false;
-    quickshell.package = pkgs.quickshell;
+    # Set quickshell.package - our quickshell.nix module will skip adding it if it's wrapped
+    # The wrapped version from dots-hyprland.nix will be used via PATH
+    quickshell.package = gitPkgs.quickshell;
     enableSystemMonitoring = true;
     enableClipboard = true;
     enableVPN = true;
@@ -25,9 +27,11 @@ in {
   };
 
   # Ensure CLI and dependencies are present even when the upstream service is disabled.
+  # Note: quickshell is provided by dots-hyprland.nix (wrapped version) to avoid collisions
   home.packages = lib.mkBefore [
     dmsPkgs.dmsCli
     dmsPkgs.dgop
+    # qsPkg removed - using wrapped version from dots-hyprland.nix
   ];
 
   systemd.user.services."quickshell-dms" = {
@@ -43,6 +47,7 @@ in {
       Environment = [
         "QT_QPA_PLATFORM=wayland"
         "QML_DISABLE_DISK_CACHE=1"
+        "PATH=${gitPkgs.quickshell}/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin"
       ];
       Restart = "on-failure";
     };

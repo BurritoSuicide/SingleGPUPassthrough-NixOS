@@ -24,7 +24,9 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+    # Only add package if it's not already wrapped (to avoid collisions)
+    # If the package name contains "wrapped", assume it's already wrapped and skip adding it
+    home.packages = lib.mkIf (!(lib.hasInfix "wrapped" cfg.package.name)) [ cfg.package ];
 
     xdg.configFile = lib.mapAttrs' (name: path: {
       name = "quickshell/${name}";

@@ -17,16 +17,26 @@
     # Git-based packages
     quickshell = {
       url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "unstable";  # Use unstable for Qt 6.10+ support
     };
 
     caelestia-shell = {
       url = "github:caelestia-dots/shell";
       inputs.nixpkgs.follows = "unstable";
     };
+
+    dankMaterialShell = {
+      url = "github:AvengeMedia/DankMaterialShell";
+      inputs.nixpkgs.follows = "unstable";
+    };
+    noctalia = {
+      url = "github:noctalia-dev/noctalia-shell";
+      inputs.nixpkgs.follows = "unstable";
+      inputs.quickshell.follows = "quickshell";
+    };
   };
 
-  outputs = { self, nixpkgs, unstable, home-manager, quickshell, caelestia-shell }:
+  outputs = { self, nixpkgs, unstable, home-manager, quickshell, caelestia-shell, dankMaterialShell, noctalia }:
     let
       system = "x86_64-linux";
       unstablePkgs = import unstable {
@@ -34,7 +44,7 @@
         config.allowUnfree = true;
       };
       gitPkgs = {
-        quickshell = quickshell.packages.${system}.default;
+        quickshell = quickshell.packages.${system}.default;  # Now built against unstable Qt
         caelestia-shell = caelestia-shell.packages.${system}.default;
       };
     in {
@@ -48,10 +58,13 @@
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
           home-manager.users.scryv = import ./home.nix;
           home-manager.extraSpecialArgs = {
-            inherit unstablePkgs;
+            inherit unstablePkgs gitPkgs;
             caelestia = caelestia-shell;
+            dms = dankMaterialShell;
+            noctaliaInput = noctalia;
           };
         }
 

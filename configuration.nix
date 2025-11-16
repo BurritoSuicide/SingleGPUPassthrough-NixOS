@@ -18,6 +18,9 @@
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
 
+  # Required for QtPositioning (used by some quickshell configurations)
+  services.geoclue2.enable = true;
+
   # Set your time zone.
   time.timeZone = "America/New_York";
 
@@ -229,7 +232,7 @@
     unstablePkgs.code-cursor
   ] ++ [
     # Git-built packages
-    gitPkgs.quickshell
+    # quickshell removed - managed at user level in home.nix to avoid collisions
   ];
 
   # Graphics support
@@ -302,5 +305,9 @@
   networking.firewall.allowedTCPPorts = [ 5900 ];
 
   system.stateVersion = "25.05";
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    allow-import-from-derivation = true;
+    pure-eval = false;
+  };
 }
