@@ -47,37 +47,87 @@ if [ -n "$ACTUAL_USER" ] && [ "$ACTUAL_USER" != "root" ]; then
     sleep 2
     
     # NOW reload Hyprland - this should happen after everything else is done
-    # Use bash -lc (login shell) to get the full user environment including PATH
+    # We need to get the user's Wayland environment variables
     echo "  → Reloading Hyprland configuration..."
+    
+    # Find the Wayland socket and runtime directory for the user
+    USER_UID=$(id -u "$ACTUAL_USER" 2>/dev/null || echo "")
+    RUNTIME_DIR="/run/user/$USER_UID"
+    
+    # Find the Wayland socket
+    WAYLAND_SOCKET="wayland-0"  # default
+    if [ -d "$RUNTIME_DIR" ]; then
+        # Look for wayland socket in runtime directory
+        FOUND_SOCKET=$(find "$RUNTIME_DIR" -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -1)
+        if [ -n "$FOUND_SOCKET" ]; then
+            WAYLAND_SOCKET=$(basename "$FOUND_SOCKET")
+        fi
+    fi
+    
+    # Get HYPRLAND_INSTANCE_SIGNATURE from the socket name or environment
+    # Hyprland uses the socket name as part of the signature
+    HYPR_SIG_FILE="$RUNTIME_DIR/hyprland-instance-signature"
+    if [ -f "$HYPR_SIG_FILE" ]; then
+        HYPR_SIG=$(cat "$HYPR_SIG_FILE" 2>/dev/null || echo "")
+    else
+        # Try to get it from the user's environment
+        HYPR_SIG=$(sudo -u "$ACTUAL_USER" bash -lc 'echo $HYPRLAND_INSTANCE_SIGNATURE' 2>/dev/null || echo "")
+    fi
+    
     # Check if config file exists and is readable
     if sudo -u "$ACTUAL_USER" test -f "$HYPR_CONFIG"; then
-        # Reload the entire config - use login shell to get full PATH
-        sudo -u "$ACTUAL_USER" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland (may not be running)"
+        # Reload the entire config with proper environment
+        echo "  → Reloading Hyprland config..."
+        if [ -n "$HYPR_SIG" ]; then
+            sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland (may not be running)"
+        else
+            sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland (may not be running)"
+        fi
         
         # Wait a moment for reload to process
         sleep 1
         
-        # Run the animatedborders script to update borders
+        # Run the animatedborders script to update borders (with proper environment)
         echo "  → Updating Hyprland borders..."
         ANIMATED_BORDERS_SCRIPT="/home/$ACTUAL_USER/.config/hypr/scripts/animatedborders.sh"
         if sudo -u "$ACTUAL_USER" test -f "$ANIMATED_BORDERS_SCRIPT"; then
-            sudo -u "$ACTUAL_USER" bash -lc "bash $ANIMATED_BORDERS_SCRIPT" 2>/dev/null || echo "    ⚠️  Could not update borders"
+            if [ -n "$HYPR_SIG" ]; then
+                sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG" bash "$ANIMATED_BORDERS_SCRIPT" 2>/dev/null || echo "    ⚠️  Could not update borders"
+            else
+                sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" bash "$ANIMATED_BORDERS_SCRIPT" 2>/dev/null || echo "    ⚠️  Could not update borders"
+            fi
         fi
         
-        # Final reload after borders are updated to ensure everything is applied
+        # Final reload after borders are updated
         echo "  → Final Hyprland config reload..."
-        sudo -u "$ACTUAL_USER" bash -lc 'hyprctl reload' 2>/dev/null || true
+        if [ -n "$HYPR_SIG" ]; then
+            sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG" bash -lc 'hyprctl reload' 2>/dev/null || true
+        else
+            sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" bash -lc 'hyprctl reload' 2>/dev/null || true
+        fi
         
         # Verify Hyprland is responding
-        if sudo -u "$ACTUAL_USER" bash -lc 'hyprctl version' >/dev/null 2>&1; then
-            echo "    ✓ Hyprland is running and config reloaded"
+        if [ -n "$HYPR_SIG" ]; then
+            if sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG" bash -lc 'hyprctl version' >/dev/null 2>&1; then
+                echo "    ✓ Hyprland is running and config reloaded"
+            else
+                echo "    ⚠️  Hyprland may not be running or environment not set correctly"
+            fi
         else
-            echo "    ⚠️  Hyprland may not be running"
+            if sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" bash -lc 'hyprctl version' >/dev/null 2>&1; then
+                echo "    ✓ Hyprland is running and config reloaded"
+            else
+                echo "    ⚠️  Hyprland may not be running or environment not set correctly"
+            fi
         fi
     else
         echo "    ⚠️  Hyprland config not found at $HYPR_CONFIG"
         echo "    → Trying reload anyway (config may be in different location)..."
-        sudo -u "$ACTUAL_USER" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland"
+        if [ -n "$HYPR_SIG" ]; then
+            sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" HYPRLAND_INSTANCE_SIGNATURE="$HYPR_SIG" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland"
+        else
+            sudo -u "$ACTUAL_USER" env XDG_RUNTIME_DIR="$RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_SOCKET" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland"
+        fi
     fi
 else
     # Fallback: try without sudo if already running as user
