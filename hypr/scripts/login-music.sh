@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-MUSIC_PATH="/home/scryv/Music/Culmination - Picayune Dreams Vol. 2.mp3"
+MUSIC_PATH="${HOME}/Music/Culmination - Picayune Dreams Vol. 2.mp3"
 PID_FILE="/tmp/login-music.pid"
 
 # Apps that won't trigger a fade-out

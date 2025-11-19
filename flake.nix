@@ -53,6 +53,13 @@
       modules = [
         ./configuration.nix
 
+        # Nixpkgs configuration (flake-based)
+        {
+          nixpkgs.config.allowUnfree = true;
+          nixpkgs.config.permittedInsecurePackages = [ "ventoy-qt5-1.1.05" ];
+          nixpkgs.config.allow32bit = true;
+        }
+
         # Home Manager module
         home-manager.nixosModules.home-manager
         {

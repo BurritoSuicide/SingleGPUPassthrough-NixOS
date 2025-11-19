@@ -29,15 +29,13 @@ in {
       description = "Sunshine Game Stream Host";
       after = [ "graphical-session.target" ];
       wantedBy = [ "default.target" ];
-      environment = {
-        XDG_SESSION_TYPE = "wayland"; # or "x11" if applicable
-        DISPLAY = ":0";               # Or pull from login session dynamically
-        WAYLAND_DISPLAY = "wayland-0"; # Check your actual value with `echo $WAYLAND_DISPLAY`
-      };
+      # Environment variables will be imported from the session automatically
       serviceConfig = {
         ExecStart = "${config.security.wrapperDir}/sunshine";
         Restart = "on-failure";
         RestartSec = "5s";
+        # Import environment from session
+        Environment = "XDG_SESSION_TYPE=wayland";
       };
     };
   };

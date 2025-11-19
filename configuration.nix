@@ -39,8 +39,6 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  swapDevices = [{ device = "/swapfile"; size = 16 * 1024; }];
-
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
@@ -50,6 +48,17 @@
 
   # Enable Hyprland
   programs.hyprland.enable = true;
+
+  # XDG Desktop Portal for MIME type handling and file associations
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-hyprland
+      xdg-desktop-portal-gtk
+      kdePackages.xdg-desktop-portal-kde
+    ];
+    configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
+  };
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -97,15 +106,7 @@
   programs.firefox.enable = true;
   programs.fish.enable = true;
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  nixpkgs.config = {
-    permittedInsecurePackages = [ "ventoy-qt5-1.1.05" ];
-    allowUnsupportedSystem = true;
-    allowBroken = true;
-    allow32bit = true;
-  };
+  # Nixpkgs configuration moved to flake.nix for flake-based configuration
 
   nixpkgs.overlays = [
     (final: prev: {
@@ -176,6 +177,8 @@
     hyprpaper
     xdg-utils
     xdgmenumaker
+    shared-mime-info
+    desktop-file-utils
     bemenu
     foot
     starship
