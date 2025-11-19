@@ -47,40 +47,37 @@ if [ -n "$ACTUAL_USER" ] && [ "$ACTUAL_USER" != "root" ]; then
     sleep 2
     
     # NOW reload Hyprland - this should happen after everything else is done
-    if sudo -u "$ACTUAL_USER" command -v hyprctl >/dev/null 2>&1; then
-        echo "  → Reloading Hyprland configuration..."
-        # Check if config file exists and is readable
-        if sudo -u "$ACTUAL_USER" test -f "$HYPR_CONFIG"; then
-            # Reload the entire config - this should reload everything including keybinds
-            sudo -u "$ACTUAL_USER" hyprctl reload 2>/dev/null || echo "    ⚠️  Could not reload Hyprland (may not be running)"
-            
-            # Wait a moment for reload to process
-            sleep 1
-            
-            # Run the animatedborders script to update borders
-            echo "  → Updating Hyprland borders..."
-            ANIMATED_BORDERS_SCRIPT="/home/$ACTUAL_USER/.config/hypr/scripts/animatedborders.sh"
-            if sudo -u "$ACTUAL_USER" test -f "$ANIMATED_BORDERS_SCRIPT"; then
-                sudo -u "$ACTUAL_USER" bash "$ANIMATED_BORDERS_SCRIPT" 2>/dev/null || echo "    ⚠️  Could not update borders"
-            fi
-            
-            # Final reload after borders are updated to ensure everything is applied
-            echo "  → Final Hyprland config reload..."
-            sudo -u "$ACTUAL_USER" hyprctl reload 2>/dev/null || true
-            
-            # Verify Hyprland is responding
-            if sudo -u "$ACTUAL_USER" hyprctl version >/dev/null 2>&1; then
-                echo "    ✓ Hyprland is running and config reloaded"
-            else
-                echo "    ⚠️  Hyprland may not be running"
-            fi
+    # Use bash -lc (login shell) to get the full user environment including PATH
+    echo "  → Reloading Hyprland configuration..."
+    # Check if config file exists and is readable
+    if sudo -u "$ACTUAL_USER" test -f "$HYPR_CONFIG"; then
+        # Reload the entire config - use login shell to get full PATH
+        sudo -u "$ACTUAL_USER" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland (may not be running)"
+        
+        # Wait a moment for reload to process
+        sleep 1
+        
+        # Run the animatedborders script to update borders
+        echo "  → Updating Hyprland borders..."
+        ANIMATED_BORDERS_SCRIPT="/home/$ACTUAL_USER/.config/hypr/scripts/animatedborders.sh"
+        if sudo -u "$ACTUAL_USER" test -f "$ANIMATED_BORDERS_SCRIPT"; then
+            sudo -u "$ACTUAL_USER" bash -lc "bash $ANIMATED_BORDERS_SCRIPT" 2>/dev/null || echo "    ⚠️  Could not update borders"
+        fi
+        
+        # Final reload after borders are updated to ensure everything is applied
+        echo "  → Final Hyprland config reload..."
+        sudo -u "$ACTUAL_USER" bash -lc 'hyprctl reload' 2>/dev/null || true
+        
+        # Verify Hyprland is responding
+        if sudo -u "$ACTUAL_USER" bash -lc 'hyprctl version' >/dev/null 2>&1; then
+            echo "    ✓ Hyprland is running and config reloaded"
         else
-            echo "    ⚠️  Hyprland config not found at $HYPR_CONFIG"
-            echo "    → Trying reload anyway (config may be in different location)..."
-            sudo -u "$ACTUAL_USER" hyprctl reload 2>/dev/null || echo "    ⚠️  Could not reload Hyprland"
+            echo "    ⚠️  Hyprland may not be running"
         fi
     else
-        echo "  ⚠️  hyprctl not found for user $ACTUAL_USER, skipping Hyprland reload"
+        echo "    ⚠️  Hyprland config not found at $HYPR_CONFIG"
+        echo "    → Trying reload anyway (config may be in different location)..."
+        sudo -u "$ACTUAL_USER" bash -lc 'hyprctl reload' 2>/dev/null || echo "    ⚠️  Could not reload Hyprland"
     fi
 else
     # Fallback: try without sudo if already running as user
