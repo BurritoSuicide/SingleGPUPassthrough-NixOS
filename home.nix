@@ -25,85 +25,16 @@ in {
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  # User packages (stable 25.05)
-  home.packages = with pkgs; [
-    # Image processing libraries (for caelestia wallpaper support)
-    imagemagick
-    libjpeg
-    libpng
-
-    # KDE applications
-    kdePackages.kate
-    kdePackages.dolphin
-    kdePackages.qt6ct
-    kdePackages.kdegraphics-thumbnailers
-    kdePackages.ffmpegthumbs
-
-    # Streaming and remote
-    sunshine
-    moonlight-qt
-
-    # Communication
-    thunderbird
-    webcord
-
-    # Media tools
-    obs-studio
-    yt-dlp
-
-    # Gaming
-    prismlauncher
-    minecraft-server
-
-    # Music streaming
-    tidal-dl
-    tidal-hifi
-    spotify
-
-    # Music production - DAWs
-    ardour
-    lmms
-    qtractor
-
-    # Music production - Synths
-    helm
-    zynaddsubfx
-
-    # Music production - Audio & MIDI utilities
-    carla
-    qjackctl
-    alsa-utils
-    fluidsynth  # MIDI synthesizer for playing piano
-
-    # Music production - Soundfonts
-    soundfont-fluid
-    soundfont-generaluser
-    soundfont-ydp-grand
-
-    #Astrophotography
-    siril
-	kstars
-
-    # Development
-    nodejs
-    vscode
-
-    # Image editing
-    gimp
-    krita
-    hyprshot
-	
-    # Productivity
-    obsidian
-    libreoffice-qt6
-
-    # 3D
-    blender
-  ] ++ (lib.optionals (noctaliaInput != null) [
-    noctaliaInput.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ]) ++ [
-    matugen
-  ];
+  # User packages (organized in packages/user/)
+  home.packages = let
+    userPackagesDir = builtins.path {
+      path = ./packages/user;
+      name = "user-packages";
+      filter = path: type: true;  # Include all files
+    };
+  in import (toString userPackagesDir + "/default.nix") {
+    inherit pkgs unstablePkgs noctaliaInput;
+  };
 
   # You can also manage individual program configurations here
   programs.git = {

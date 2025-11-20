@@ -115,128 +115,16 @@
     })
   ];
 
-  # System packages (stable 25.05)
-  environment.systemPackages = with pkgs; [
-
-    # Python with packages
-    (python3.withPackages (ps: with ps; [
-      pip
-      virtualenv
-      flask
-      requests
-      pyperclip
-      textual
-      pypresence
-    ]))
-
-    # System utilities
-    fastfetch
-    btop
-    caligula
-    ventoy-full-qt
-    nix-update
-    psutils
-    sysstat
-    eza
-    vim
-    wget
-    git
-    micro
-    pciutils
-    fd
-    tree
-    curl
-    gawk
-    jq
-    fzf
-    bc
-    busybox
-
-    # Monitoring
-    radeontop
-    amdgpu_top
-    gcalcli
-    libqalculate
-
-    # GPU Tuning
-    e2fsprogs
-    lact
-
-    # Disk Management
-    ncdu
-
-    # Wayland/Hyprland
-    wofi
-    kitty
-    nwg-look
-    libnotify
-    brightnessctl
-    playerctl
-    pamixer
-    swww
-    hyprpaper
-    xdg-utils
-    xdgmenumaker
-    shared-mime-info
-    desktop-file-utils
-    bemenu
-    foot
-    starship
-
-    # Media
-    mpv
-    mpvpaper
-    ffmpeg
-    socat
-    wireplumber
-    sassc
-    pavucontrol
-    vlc
-
-    # Electronics
-    arduino-ide
-
-    # Gaming
-    lutris
-    wine
-    wine64
-    winetricks
-    bottles
-    mangohud
-    protonup-qt
-    heroic
-
-    # .NET
-    dotnet-sdk_8
-    dotnet-runtime_8
-    dotnet-aspnetcore_8
-
-    # Remoting
-    xorg.xrandr
-    openssl
-
-    # Phone streaming
-    android-tools
-    scrcpy
-
-    # AI
-    ollama
-
-	# Hyprland
-	hyprlock
-  ] ++ [
-    # Unstable packages
-    unstablePkgs.kando
-    unstablePkgs.waybar
-    unstablePkgs.wayvnc
-    unstablePkgs.app2unit
-    unstablePkgs.ddcutil
-    unstablePkgs.libcava
-    unstablePkgs.code-cursor
-  ] ++ [
-    # Git-built packages
-    # quickshell removed - managed at user level in home.nix to avoid collisions
-  ];
+  # System packages (organized in packages/system/)
+  environment.systemPackages = let
+    systemPackagesDir = builtins.path {
+      path = ./packages/system;
+      name = "system-packages";
+      filter = path: type: true;  # Include all files
+    };
+  in import (toString systemPackagesDir + "/default.nix") {
+    inherit pkgs unstablePkgs;
+  };
 
   # Graphics support
   hardware.graphics.enable = true;
