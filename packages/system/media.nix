@@ -12,7 +12,9 @@ with pkgs; [
   # Audio
   wireplumber  # Audio session manager
   pavucontrol  # PulseAudio volume control
-  sassc        # Sass compiler (for styling)
+  
+  # Build tools (CSS preprocessing)
+  sassc        # Sass/SCSS compiler (used for styling themes)
   
   # Network utilities for media
   socat     # Multipurpose relay

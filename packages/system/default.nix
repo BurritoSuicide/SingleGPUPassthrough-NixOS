@@ -6,7 +6,8 @@ let
   monitoring = import ./monitoring.nix { inherit pkgs; };
   gpu = import ./gpu.nix { inherit pkgs; };
   disk = import ./disk.nix { inherit pkgs; };
-  wayland = import ./wayland.nix { inherit pkgs unstablePkgs; };
+  wayland = import ./wayland.nix { inherit pkgs; };
+  waylandUnstable = import ./wayland-unstable.nix { inherit unstablePkgs; };
   media = import ./media.nix { inherit pkgs; };
   electronics = import ./electronics.nix { inherit pkgs; };
   gaming = import ./gaming.nix { inherit pkgs; };
@@ -22,6 +23,7 @@ python
 ++ gpu
 ++ disk
 ++ wayland
+++ waylandUnstable
 ++ media
 ++ electronics
 ++ gaming

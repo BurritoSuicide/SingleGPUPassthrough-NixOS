@@ -1,31 +1,32 @@
 { config, pkgs, lib, unstablePkgs, caelestia, noctaliaInput ? null, gitPkgs ? {}, ... }:
 
-let
-  hyprctlBin = "${pkgs.hyprland}/bin/hyprctl";
-  jqBin = "${pkgs.jq}/bin/jq";
-  caelestiaCliBin = "${config.programs.caelestia.cli.package}/bin/caelestia";
-in {
+{
+  # ============================================================================
+  # Imports
+  # ============================================================================
   # Import quickshell desktop shells
+  # Consolidate shell imports to avoid multiple builtins.path calls
   imports = [
     ./modules/quickshell.nix
-    (let shellsSrc = builtins.path { path = ./shells; name = "shells"; }; in shellsSrc + "/caelestia.nix")
-    (let shellsSrc = builtins.path { path = ./shells; name = "shells"; }; in shellsSrc + "/dankmaterial.nix")
-    (let shellsSrc = builtins.path { path = ./shells; name = "shells"; }; in shellsSrc + "/noctalia.nix")
-  ];
+  ] ++ (let shellsSrc = builtins.path { path = ./shells; name = "shells"; }; in [
+    (shellsSrc + "/caelestia.nix")
+    (shellsSrc + "/dankmaterial.nix")
+    (shellsSrc + "/noctalia.nix")
+  ]);
 
-  # Home Manager needs a bit of information about you and the paths it should manage.
+  # ============================================================================
+  # Home Manager Basic Configuration
+  # ============================================================================
   home.username = "scryv";
   home.homeDirectory = "/home/scryv";
-
-  # This value determines the Home Manager release that your configuration is
-  # compatible with. This helps avoid breakage when a new Home Manager release
-  # introduces backwards incompatible changes.
   home.stateVersion = "25.05";
-
-  # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  # ============================================================================
+  # User Packages
+  # ============================================================================
   # User packages (organized in packages/user/)
+  # See packages/user/README.md for package organization
   home.packages = let
     userPackagesDir = builtins.path {
       path = ./packages/user;
@@ -36,13 +37,18 @@ in {
     inherit pkgs unstablePkgs noctaliaInput;
   };
 
-  # You can also manage individual program configurations here
+  # ============================================================================
+  # Program Configuration
+  # ============================================================================
   programs.git = {
     enable = true;
   };
 
+  # ============================================================================
+  # Home Manager Activation Scripts
+  # ============================================================================
   # Caelestia and Noctalia moved to ./shells/*.nix
- 
+
   # Install Hyprland config as real files (not symlinks) into ~/.config/hypr
   home.activation.installHyprConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     set -eu
@@ -76,10 +82,12 @@ in {
     fi
   '';
 
- 
-
+  # ============================================================================
+  # Systemd User Services
+  # ============================================================================
   # Hypr scripts are included via the directory mapping above
 
+  # Service to sync Hyprland borders with active shell color scheme
   systemd.user.services.hypr-border-sync = {
     Unit = {
       Description = "Sync Hyprland borders with active shell color scheme";

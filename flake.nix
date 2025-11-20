@@ -32,7 +32,8 @@
     noctalia = {
       url = "github:noctalia-dev/noctalia-shell";
       inputs.nixpkgs.follows = "unstable";
-      inputs.quickshell.follows = "quickshell";
+      # Note: quickshell override removed - noctalia's flake doesn't declare it as an input
+      # If needed, it will use its own quickshell dependency
     };
   };
 

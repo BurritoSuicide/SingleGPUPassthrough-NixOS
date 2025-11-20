@@ -5,26 +5,33 @@
 { config, pkgs, lib, unstablePkgs, gitPkgs, ... }:
 
 {
+  # ============================================================================
+  # Imports
+  # ============================================================================
   imports = [
     ./hardware-configuration.nix
     ./sunshine/sunshine.nix
     ./gpu-passthrough.nix
   ];
 
-  # Bootloader.
+  # ============================================================================
+  # Boot Configuration
+  # ============================================================================
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # ============================================================================
+  # Networking
+  # ============================================================================
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
 
+  # ============================================================================
+  # Localization
+  # ============================================================================
   # Required for QtPositioning (used by some quickshell configurations)
   services.geoclue2.enable = true;
-
-  # Set your time zone.
   time.timeZone = "America/New_York";
-
-  # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
   i18n.extraLocaleSettings = {
@@ -39,14 +46,17 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  # Enable the X11 windowing system.
+  # ============================================================================
+  # Display and Desktop Environment
+  # ============================================================================
+  # Enable the X11 windowing system (required for some applications)
   services.xserver.enable = true;
 
-  # Enable the KDE Plasma Desktop Environment.
+  # KDE Plasma Desktop Environment
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
 
-  # Enable Hyprland
+  # Hyprland Wayland compositor
   programs.hyprland.enable = true;
 
   # XDG Desktop Portal for MIME type handling and file associations
@@ -60,15 +70,19 @@
     configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
   };
 
-  # Configure keymap in X11
+  # Keyboard configuration
   services.xserver.xkb = {
     layout = "us";
     variant = "";
   };
 
-  # Enable CUPS to print documents.
+  # ============================================================================
+  # Audio and Printing
+  # ============================================================================
+  # Printing support
   services.printing.enable = true;
 
+  # PipeWire audio system
   services.pipewire = {
     enable = true;
     audio.enable = true;
@@ -91,10 +105,15 @@
     };
   };
 
+  # ============================================================================
+  # Android Development
+  # ============================================================================
   services.udev.packages = [ pkgs.android-udev-rules ];
   programs.adb.enable = true;
 
-  # Define a user account. Don't forget to set a password with 'passwd'.
+  # ============================================================================
+  # User Configuration
+  # ============================================================================
   users.users.scryv = {
     isNormalUser = true;
     description = "scryv";
@@ -102,12 +121,16 @@
     shell = pkgs.fish;
   };
 
-  # Install firefox.
+  # ============================================================================
+  # System Programs
+  # ============================================================================
   programs.firefox.enable = true;
   programs.fish.enable = true;
 
+  # ============================================================================
+  # Package Management
+  # ============================================================================
   # Nixpkgs configuration moved to flake.nix for flake-based configuration
-
   nixpkgs.overlays = [
     (final: prev: {
       python3 = prev.python312;
@@ -116,6 +139,7 @@
   ];
 
   # System packages (organized in packages/system/)
+  # See packages/system/README.md for package organization
   environment.systemPackages = let
     systemPackagesDir = builtins.path {
       path = ./packages/system;
@@ -126,18 +150,31 @@
     inherit pkgs unstablePkgs;
   };
 
-  # Graphics support
+  # ============================================================================
+  # Hardware Configuration
+  # ============================================================================
   hardware.graphics.enable = true;
 
-  # Remoting
+  # ============================================================================
+  # Remote Access Services
+  # ============================================================================
   services.openssh.enable = true;
   services.tailscale.enable = true;
 
+  # ============================================================================
+  # System Services
+  # ============================================================================
+  # Web-based system management
   services.cockpit = {
     enable = true;
     openFirewall = true;
   };
 
+  # Game streaming host (Sunshine)
+  # Note: The sunshine module in ./sunshine/sunshine.nix provides a user service.
+  # This system service is kept for system-level configuration (firewall, capabilities).
+  # The actual Sunshine daemon runs as a user service via the module.
+  # A newer version of sunshine is also available via unstable packages.
   services.sunshine = {
     enable = true;
     autoStart = true;
@@ -145,7 +182,9 @@
     openFirewall = true;
   };
 
-  # Linux Gaming
+  # ============================================================================
+  # Gaming
+  # ============================================================================
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
@@ -153,22 +192,27 @@
     gamescopeSession.enable = true;
   };
 
-  # Flatpak
+  # ============================================================================
+  # Flatpak Support
+  # ============================================================================
   services.flatpak.enable = true;
-
   environment.sessionVariables.XDG_DATA_DIRS = lib.mkAfter [
     "/var/lib/flatpak/exports/share"
     "${config.users.users.scryv.home}/.local/share/flatpak/exports/share"
   ];
 
+  # ============================================================================
+  # Security and Permissions
+  # ============================================================================
   security.polkit.enable = true;
-
-
   security.sudo.enable = true;
   security.sudo.extraConfig = ''
     scryv ALL=(ALL) NOPASSWD: /run/current-system/sw/bin/radeontop
   '';
 
+  # ============================================================================
+  # Fonts
+  # ============================================================================
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
@@ -176,7 +220,9 @@
     papirus-icon-theme
   ];
 
-
+  # ============================================================================
+  # Virtualization and GPU Passthrough
+  # ============================================================================
   # Configure GPU passthrough for virtualization. See gpu-passthrough.nix for more information.
   services.gpu-passthrough = {
     enable = true;
@@ -187,14 +233,20 @@
       "1002:731f"  # RX 5600/5700 XT GPU
       "1002:ab38"  # Navi 10 HDMI Audio
     ];
-    hugepages = null;  #Disabled initially
+    hugepages = null;  # Disabled initially
   };
-
   virtualisation.kvmgt.enable = true;
 
-  # Open ports in the firewall.
-  networking.firewall.allowedTCPPorts = [ 5900 ];
+  # ============================================================================
+  # Firewall Configuration
+  # ============================================================================
+  # Note: Most services (cockpit, sunshine, tailscale, steam) handle their own firewall rules
+  # via their respective service modules. Only explicitly list ports not handled by services.
+  networking.firewall.allowedTCPPorts = [ 5900 ];  # VNC port (if using VNC server)
 
+  # ============================================================================
+  # Nix Configuration
+  # ============================================================================
   system.stateVersion = "25.05";
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
