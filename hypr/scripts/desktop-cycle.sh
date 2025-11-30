@@ -8,9 +8,9 @@ STATE_FILE="${STATE_ROOT}/active-shell"
 
 mkdir -p "${STATE_ROOT}"
 
-sessions=(caelestia noctalia dms)
-services=("caelestia.service" "noctalia-shell.service" "quickshell-dms.service")
-labels=("Caelestia Shell" "Noctalia" "DankMaterialShell")
+sessions=(caelestia noctalia dms ii)
+services=("caelestia.service" "noctalia-shell.service" "quickshell-dms.service" "quickshell-ii.service")
+labels=("Caelestia Shell" "Noctalia" "DankMaterialShell" "Illogical Impulse")
 
 current="$(cat "$STATE_FILE" 2>/dev/null || echo "caelestia")"
 
@@ -48,6 +48,12 @@ case "$next" in
   dms)
     if ! "$SYSTEMCTL" --user start quickshell-dms.service; then
       [ -x "$NOTIFY_SEND" ] && "$NOTIFY_SEND" -t 5000 "Failed to start DankMaterialShell" "unit: quickshell-dms.service"
+      exit 1
+    fi
+    ;;
+  ii)
+    if ! "$SYSTEMCTL" --user start quickshell-ii.service; then
+      [ -x "$NOTIFY_SEND" ] && "$NOTIFY_SEND" -t 5000 "Failed to start Illogical Impulse" "unit: quickshell-ii.service"
       exit 1
     fi
     ;;

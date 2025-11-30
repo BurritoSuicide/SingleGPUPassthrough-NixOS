@@ -140,13 +140,7 @@
 
   # System packages (organized in packages/system/)
   # See packages/system/README.md for package organization
-  environment.systemPackages = let
-    systemPackagesDir = builtins.path {
-      path = ./packages/system;
-      name = "system-packages";
-      filter = path: type: true;  # Include all files
-    };
-  in import (toString systemPackagesDir + "/default.nix") {
+  environment.systemPackages = import ./packages/system/default.nix {
     inherit pkgs unstablePkgs;
   };
 
@@ -236,13 +230,30 @@
     hugepages = null;  # Disabled initially
   };
   virtualisation.kvmgt.enable = true;
+  
+  # ============================================================================
+  # MJPG Configuration
+  # ============================================================================
+  # Live feed - service is installed but not started automatically on boot
+  # Start manually with: sudo systemctl start mjpg-streamer.service
+  # Stop with: sudo systemctl stop mjpg-streamer.service
+  # Enable/disable auto-start with: sudo systemctl enable/disable mjpg-streamer.service
+  services.mjpg-streamer = {
+      enable = true;  # Create the service
+      inputPlugin = "input_uvc.so -d /dev/video0 -r 640x480 -f 15";
+      outputPlugin = "output_http.so -p 8081 -w @www@";
+    };
+  
+  # Override the service to not start automatically on boot
+  # The service will be available via systemctl but won't auto-start
+  systemd.services.mjpg-streamer.wantedBy = lib.mkForce [ ];
 
   # ============================================================================
   # Firewall Configuration
   # ============================================================================
   # Note: Most services (cockpit, sunshine, tailscale, steam) handle their own firewall rules
   # via their respective service modules. Only explicitly list ports not handled by services.
-  networking.firewall.allowedTCPPorts = [ 5900 ];  # VNC port (if using VNC server)
+  networking.firewall.allowedTCPPorts = [ 5900 8081 ];  # VNC port (if using VNC server)
 
   # ============================================================================
   # Nix Configuration

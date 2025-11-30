@@ -32,4 +32,3 @@ with pkgs; [
   # Shell prompt
   starship  # Cross-shell prompt
 ]
-

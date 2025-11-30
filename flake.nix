@@ -35,9 +35,16 @@
       # Note: quickshell override removed - noctalia's flake doesn't declare it as an input
       # If needed, it will use its own quickshell dependency
     };
+
+    # Illogical Impulse (end-4-dots) shell
+    illogical-impulse = {
+      url = "github:xBLACKICEx/end-4-dots-hyprland-nixos";
+      inputs.nixpkgs.follows = "unstable";
+      inputs.quickshell.follows = "quickshell";
+    };
   };
 
-  outputs = { self, nixpkgs, unstable, home-manager, quickshell, caelestia-shell, dankMaterialShell, noctalia }:
+  outputs = { self, nixpkgs, unstable, home-manager, quickshell, caelestia-shell, dankMaterialShell, noctalia, illogical-impulse }:
     let
       system = "x86_64-linux";
       unstablePkgs = import unstable {
@@ -67,13 +74,14 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.backupFileExtension = "backup";
-          home-manager.users.scryv = import ./home.nix;
-          home-manager.extraSpecialArgs = {
-            inherit unstablePkgs gitPkgs;
-            caelestia = caelestia-shell;
-            dms = dankMaterialShell;
-            noctaliaInput = noctalia;
-          };
+              home-manager.users.scryv = import ./home.nix;
+              home-manager.extraSpecialArgs = {
+                inherit unstablePkgs gitPkgs;
+                caelestia = caelestia-shell;
+                dms = dankMaterialShell;
+                noctaliaInput = noctalia;
+                illogicalImpulse = illogical-impulse;
+              };
         }
 
         # Pass additional package sets as arguments
