@@ -253,7 +253,7 @@
   # ============================================================================
   # Note: Most services (cockpit, sunshine, tailscale, steam) handle their own firewall rules
   # via their respective service modules. Only explicitly list ports not handled by services.
-  networking.firewall.allowedTCPPorts = [ 5900 8081 ];  # VNC port (if using VNC server)
+  networking.firewall.allowedTCPPorts = [ 5900 8081 25565 ];  # VNC port (if using VNC server)
 
   # ============================================================================
   # Nix Configuration
