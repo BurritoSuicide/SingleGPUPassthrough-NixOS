@@ -14,5 +14,8 @@ with pkgs; [
   # Gaming utilities
   mangohud    # Vulkan overlay for monitoring
   protonup-qt # Proton-GE updater
+  
+  # Minecraft server dependencies
+  jdk8_headless  # Java 8 JDK (headless) for Minecraft servers like Skyfactory 4
 ]
 
