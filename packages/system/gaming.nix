@@ -16,6 +16,6 @@ with pkgs; [
   protonup-qt # Proton-GE updater
   
   # Minecraft server dependencies
-  jdk8_headless  # Java 8 JDK (headless) for Minecraft servers like Skyfactory 4
+  jdk8  # Java 8 JDK (headless) for Minecraft servers like Skyfactory 4
 ]
 
