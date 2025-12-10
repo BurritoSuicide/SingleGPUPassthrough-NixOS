@@ -322,6 +322,65 @@ let
     echo "VFIO stop complete"
   '';
 
+  # Script to update QEMU and firmware symlinks
+  updateQemuSymlinks = pkgs.writeShellScript "update-qemu-symlinks" ''
+    #!/usr/bin/env bash
+    set -e
+    
+    QEMU_PKG="${pkgs.qemu_kvm}"
+    OVMF_PKG="${pkgs.OVMF.fd}"
+    
+    # Create stable symlinks for QEMU binaries
+    mkdir -p /usr/bin
+    for bin in qemu-system-x86_64 qemu-system-i386 qemu-img qemu-nbd qemu-io; do
+      if [ -f "$QEMU_PKG/bin/$bin" ]; then
+        ln -sf "$QEMU_PKG/bin/$bin" "/usr/bin/$bin"
+      fi
+    done
+    
+    # Create stable symlink for OVMF firmware directory
+    mkdir -p /usr/share/qemu
+    if [ -d "$OVMF_PKG/share/firmware" ]; then
+      ln -sfn "$OVMF_PKG/share/firmware" /usr/share/qemu/firmware
+    elif [ -d "$OVMF_PKG/share/OVMF" ]; then
+      ln -sfn "$OVMF_PKG/share/OVMF" /usr/share/qemu/firmware
+    fi
+    
+    # Also create symlink for OVMF.fd specifically
+    if [ -f "$OVMF_PKG/share/firmware/ovmf_x64.fd" ]; then
+      ln -sf "$OVMF_PKG/share/firmware/ovmf_x64.fd" /usr/share/qemu/ovmf_x64.fd
+    elif [ -f "$OVMF_PKG/share/OVMF/OVMF_CODE.fd" ]; then
+      ln -sf "$OVMF_PKG/share/OVMF/OVMF_CODE.fd" /usr/share/qemu/ovmf_x64.fd
+    fi
+    
+    if [ -f "$OVMF_PKG/share/firmware/ovmf_x64_vars.fd" ]; then
+      ln -sf "$OVMF_PKG/share/firmware/ovmf_x64_vars.fd" /usr/share/qemu/ovmf_x64_vars.fd
+    elif [ -f "$OVMF_PKG/share/OVMF/OVMF_VARS.fd" ]; then
+      ln -sf "$OVMF_PKG/share/OVMF/OVMF_VARS.fd" /usr/share/qemu/ovmf_x64_vars.fd
+    fi
+  '';
+
+  # Script to update existing VM XML files with new paths
+  updateVmXmls = pkgs.writeShellScript "update-vm-xmls" ''
+    #!/usr/bin/env bash
+    set -e
+    
+    # Update QEMU binary paths in VM XML files
+    if [ -d /var/lib/libvirt/qemu ]; then
+      find /var/lib/libvirt/qemu -name "*.xml" -type f | while read xml; do
+        # Update QEMU binary paths to use /usr/bin symlinks
+        ${pkgs.gnused}/bin/sed -i \
+          -e 's|/nix/store/[^/]*/bin/qemu-system-x86_64|/usr/bin/qemu-system-x86_64|g' \
+          -e 's|/nix/store/[^/]*/bin/qemu-system-i386|/usr/bin/qemu-system-i386|g' \
+          -e 's|/nix/store/[^/]*/share/firmware/ovmf_x64.fd|/usr/share/qemu/ovmf_x64.fd|g' \
+          -e 's|/nix/store/[^/]*/share/firmware/ovmf_x64_vars.fd|/usr/share/qemu/ovmf_x64_vars.fd|g' \
+          -e 's|/nix/store/[^/]*/share/OVMF/OVMF_CODE.fd|/usr/share/qemu/ovmf_x64.fd|g' \
+          -e 's|/nix/store/[^/]*/share/OVMF/OVMF_VARS.fd|/usr/share/qemu/ovmf_x64_vars.fd|g' \
+          "$xml" 2>/dev/null || true
+      done
+    fi
+  '';
+
 in {
   options.services.gpu-passthrough = {
     enable = mkEnableOption "GPU passthrough for single GPU VFIO";
@@ -392,6 +451,12 @@ in {
       nbd
       dmg2img
       nbd
+      # Make update script available as a system command
+      (pkgs.writeShellScriptBin "update-qemu-symlinks" ''
+        ${updateQemuSymlinks}
+        ${updateVmXmls}
+        echo "QEMU symlinks and VM XML files updated successfully"
+      '')
     ];
 
     # Enable libvirtd
@@ -422,9 +487,16 @@ in {
         coreutils
         util-linux
         gnugrep
+        gnused
       ];
 
       preStart = lib.mkAfter ''
+        # Update QEMU and firmware symlinks to current versions
+        ${updateQemuSymlinks}
+        
+        # Update existing VM XML files to use new paths
+        ${updateVmXmls}
+        
         mkdir -p /var/lib/libvirt/hooks
         mkdir -p /var/lib/libvirt/hooks/qemu.d/${cfg.vmName}/prepare/begin
         mkdir -p /var/lib/libvirt/hooks/qemu.d/${cfg.vmName}/release/end
@@ -459,5 +531,11 @@ in {
     # Enable hardware virtualization
     virtualisation.kvmgt.enable = true;
     hardware.graphics.enable = true;
+
+    # Create symlinks on system activation (runs on every rebuild)
+    system.activationScripts.updateQemuSymlinks = lib.stringAfter [ "var" ] ''
+      ${updateQemuSymlinks}
+      ${updateVmXmls}
+    '';
   };
 }

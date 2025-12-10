@@ -29,6 +29,9 @@ with pkgs; [
   shared-mime-info # MIME type database
   desktop-file-utils  # Desktop file utilities
   
+  # GTK utilities (needed for gtk-launch to launch applications from dock)
+  gtk3             # GTK3 library (provides gtk-launch for desktop entry execution)
+  
   # Shell prompt
   starship  # Cross-shell prompt
 ]

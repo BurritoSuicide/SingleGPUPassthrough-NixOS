@@ -6,5 +6,9 @@ with pkgs; [
   
   # Game servers
   minecraft-server  # Minecraft server
+
+  # Emulation
+  retroarch-full
+  ryubing
 ]
 

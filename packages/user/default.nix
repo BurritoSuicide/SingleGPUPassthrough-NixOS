@@ -1,4 +1,4 @@
-{ pkgs, unstablePkgs, noctaliaInput ? null, ... }:
+{ pkgs, unstablePkgs, ... }:
 
 let
   imageLibs = import ./image-libs.nix { inherit pkgs; };
@@ -11,14 +11,10 @@ let
   musicProduction = import ./music-production.nix { inherit pkgs; };
   astro = import ./astro.nix { inherit pkgs; };
   dev = import ./dev.nix { inherit pkgs; };
-  imageEditing = import ./image-editing.nix { inherit pkgs; };
   productivity = import ./productivity.nix { inherit pkgs; };
   threeD = import ./3d.nix { inherit pkgs; };
   theming = import ./theming.nix { inherit pkgs; };
-  
-  noctalia = if noctaliaInput != null then [
-    noctaliaInput.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ] else [];
+  imageEditing = import ./image-editing.nix { inherit pkgs unstablePkgs; };
 in
 imageLibs
 ++ kde
@@ -34,5 +30,4 @@ imageLibs
 ++ productivity
 ++ threeD
 ++ theming
-++ noctalia
 

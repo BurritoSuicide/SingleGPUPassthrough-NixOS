@@ -6,5 +6,8 @@ with pkgs; [
   
   # Messaging
   webcord      # Discord client
+
+  # Teams
+  teams-for-linux
 ]
 

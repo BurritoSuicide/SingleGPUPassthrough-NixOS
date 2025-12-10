@@ -1,10 +1,9 @@
-{ config, pkgs, lib, gitPkgs ? {}, ... }:
+{ config, pkgs, lib, ... }:
 let
   cfg = config.programs.quickshell;
 
   defaultPackage =
-    if gitPkgs ? quickshell then gitPkgs.quickshell
-    else if pkgs ? quickshell then pkgs.quickshell
+    if pkgs ? quickshell then pkgs.quickshell
     else throw "No QuickShell package available. Provide one via programs.quickshell.package.";
 in {
   options.programs.quickshell = with lib; {

@@ -14,46 +14,32 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Git-based packages
-    quickshell = {
-      url = "git+https://git.outfoxxed.me/outfoxxed/quickshell";
-      inputs.nixpkgs.follows = "unstable";  # Use unstable for Qt 6.10+ support
+    # DankMaterialShell dependencies
+    dgop = {
+      url = "github:AvengeMedia/dgop";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    caelestia-shell = {
-      url = "github:caelestia-dots/shell";
-      inputs.nixpkgs.follows = "unstable";
-    };
-
+    # DankMaterialShell
     dankMaterialShell = {
       url = "github:AvengeMedia/DankMaterialShell";
-      inputs.nixpkgs.follows = "unstable";
-    };
-    noctalia = {
-      url = "github:noctalia-dev/noctalia-shell";
-      inputs.nixpkgs.follows = "unstable";
-      # Note: quickshell override removed - noctalia's flake doesn't declare it as an input
-      # If needed, it will use its own quickshell dependency
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.dgop.follows = "dgop";
     };
 
-    # Illogical Impulse (end-4-dots) shell
-    illogical-impulse = {
-      url = "github:xBLACKICEx/end-4-dots-hyprland-nixos";
-      inputs.nixpkgs.follows = "unstable";
-      inputs.quickshell.follows = "quickshell";
+    # SilentSDDM theme
+    silentSDDM = {
+      url = "github:uiriansan/SilentSDDM";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, unstable, home-manager, quickshell, caelestia-shell, dankMaterialShell, noctalia, illogical-impulse }:
+  outputs = { self, nixpkgs, unstable, home-manager, dgop, dankMaterialShell, silentSDDM }:
     let
       system = "x86_64-linux";
       unstablePkgs = import unstable {
         inherit system;
         config.allowUnfree = true;
-      };
-      gitPkgs = {
-        quickshell = quickshell.packages.${system}.default;  # Now built against unstable Qt
-        caelestia-shell = caelestia-shell.packages.${system}.default;
       };
     in {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
@@ -64,7 +50,10 @@
         # Nixpkgs configuration (flake-based)
         {
           nixpkgs.config.allowUnfree = true;
-          nixpkgs.config.permittedInsecurePackages = [ "ventoy-qt5-1.1.05" ];
+          nixpkgs.config.permittedInsecurePackages = [
+            "ventoy-qt5-1.1.05"
+            "electron-36.9.5"
+          ];
           nixpkgs.config.allow32bit = true;
         }
 
@@ -76,18 +65,16 @@
           home-manager.backupFileExtension = "backup";
               home-manager.users.scryv = import ./home.nix;
               home-manager.extraSpecialArgs = {
-                inherit unstablePkgs gitPkgs;
-                caelestia = caelestia-shell;
-                dms = dankMaterialShell;
-                noctaliaInput = noctalia;
-                illogicalImpulse = illogical-impulse;
+                inherit unstablePkgs;
+                inherit dankMaterialShell;
               };
         }
 
-        # Pass additional package sets as arguments
+        # Pass additional package sets and inputs as arguments
         {
           _module.args = {
-            inherit unstablePkgs gitPkgs;
+            inherit unstablePkgs;
+            inherit silentSDDM;
           };
         }
       ];

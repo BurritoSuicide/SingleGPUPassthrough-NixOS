@@ -1,0 +1,12 @@
+[0;1;31m×[0m dms.service - DankMaterialShell
+     Loaded: loaded (]8;;file://nixos/home/scryv/.config/systemd/user/dms.service\/home/scryv/.config/systemd/user/dms.service]8;;\; [0;1;32menabled[0m; preset: ignored)
+     Active: [0;1;31mfailed[0m (Result: exit-code) since Wed 2025-12-10 16:30:46 EST; 6s ago
+   Duration: 26ms
+ Invocation: 9eaf12ce6feb453e9d927e673f0a55f8
+    Process: 93516 ExecStart=/nix/store/lh4yndv18flk23p44pz3bx1zrigmryvz-dms-shell-1.2-unstable+date=2025-12-10_0dbd59b/bin/dms run --session [0;1;31m(code=exited, status=1/FAILURE)[0m
+   Main PID: 93516 (code=exited, status=1/FAILURE)
+
+Dec 10 16:30:46 nixos systemd[1678]: dms.service: Scheduled restart job, restart counter is at 5.
+Dec 10 16:30:46 nixos systemd[1678]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mdms.service: Start request repeated too quickly.[0m
+Dec 10 16:30:46 nixos systemd[1678]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mdms.service: Failed with result 'exit-code'.[0m
+Dec 10 16:30:46 nixos systemd[1678]: [0;1;31m[0;1;39m[0;1;31mFailed to start DankMaterialShell.[0m

@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, lib, unstablePkgs, gitPkgs, ... }:
+{ config, pkgs, lib, unstablePkgs, silentSDDM ? null, ... }:
 
 {
   # ============================================================================
@@ -29,7 +29,6 @@
   # ============================================================================
   # Localization
   # ============================================================================
-  # Required for QtPositioning (used by some quickshell configurations)
   services.geoclue2.enable = true;
   time.timeZone = "America/New_York";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -52,8 +51,46 @@
   # Enable the X11 windowing system (required for some applications)
   services.xserver.enable = true;
 
+  # Display Manager (SDDM works well with Hyprland)
+  services.displayManager.defaultSession = "hyprland";
+  services.displayManager.sddm = {
+    enable = true;
+    package = lib.mkForce pkgs.kdePackages.sddm;  # Use Qt6 version of SDDM (override plasma6 default)
+  } // lib.optionalAttrs (silentSDDM != null) {
+    # SilentSDDM theme configuration
+    theme = let
+      sddm-theme = silentSDDM.packages.${pkgs.system}.default.override {
+        theme = "default";
+      };
+    in sddm-theme.pname;
+    extraPackages = let
+      sddm-theme = silentSDDM.packages.${pkgs.system}.default.override {
+        theme = "default";
+      };
+    in sddm-theme.propagatedBuildInputs;
+    settings = let
+      sddm-theme = silentSDDM.packages.${pkgs.system}.default.override {
+        theme = "default";
+      };
+    in {
+      General = {
+        # Set QML import path for theme components
+        # Note: QT_SCALE_FACTOR removed - let SDDM handle scaling automatically
+        GreeterEnvironment = "QML2_IMPORT_PATH=${sddm-theme}/share/sddm/themes/${sddm-theme.pname}/components/";
+        # Don't force virtual keyboard - let it show only when needed (prevents flashing)
+        # InputMethod = "qtvirtualkeyboard";  # Commented out to prevent flashing
+      };
+      # Enable HiDPI scaling for 4K displays
+      Wayland = {
+        EnableHiDPI = true;
+      };
+      X11 = {
+        EnableHiDPI = true;
+      };
+    };
+  };
+
   # KDE Plasma Desktop Environment
-  services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
 
   # Hyprland Wayland compositor
@@ -131,18 +168,26 @@
   # Package Management
   # ============================================================================
   # Nixpkgs configuration moved to flake.nix for flake-based configuration
+  # Overlay to replace papirus-icon-theme with breeze-icons
   nixpkgs.overlays = [
     (final: prev: {
       python3 = prev.python312;
       python3Packages = prev.python312Packages;
+      # Replace papirus-icon-theme with breeze-icons to avoid collision
+      papirus-icon-theme = prev.kdePackages.breeze-icons;
     })
   ];
 
   # System packages (organized in packages/system/)
   # See packages/system/README.md for package organization
-  environment.systemPackages = import ./packages/system/default.nix {
+  environment.systemPackages = (import ./packages/system/default.nix {
     inherit pkgs unstablePkgs;
-  };
+  }) ++ (lib.optionalAttrs (silentSDDM != null) [
+    # Include SilentSDDM theme package so it's available to SDDM
+    (silentSDDM.packages.${pkgs.system}.default.override {
+      theme = "default";
+    })
+  ]);
 
   # ============================================================================
   # Hardware Configuration
@@ -211,7 +256,6 @@
     nerd-fonts.jetbrains-mono
     nerd-fonts.fira-code
     nerd-fonts.hack
-    papirus-icon-theme
   ];
 
   # ============================================================================
@@ -258,6 +302,7 @@
   # ============================================================================
   # Nix Configuration
   # ============================================================================
+  nixpkgs.config.allowUnsupportedSystem = true;
   system.stateVersion = "25.05";
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
